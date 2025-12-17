@@ -1,36 +1,33 @@
 import streamlit as st
 
 def render_sidebar():
-    """
-    Renders a unified, fancy sidebar for the application.
-    """
     with st.sidebar:
-        st.header("🌍 Agence de Voyage")
-        st.caption("Système de Gestion")
+        st.header("Agence de Voyage")
+        st.caption("Systeme de Gestion")
         st.divider()
         
-        st.markdown("### 🧭 Navigation")
-        
-        # Using st.page_link for a native, unified look with automatic active state highlighting
-        st.page_link("Accueil.py", label="Accueil", icon="🏠")
-        st.page_link("pages/Agence.py", label="Agences de Voyage", icon="✈️")
-        st.page_link("pages/Reservation.py", label="Reservations", icon="📊")
-        st.page_link("pages/Chambre.py", label="Chambres" , icon="🛏️")
+        st.markdown("### Navigation")
+        st.page_link("Accueil.py", label="Accueil")
+        st.page_link("pages/Agence.py", label="Agences de Voyage")
+        st.page_link("pages/Reservation.py", label="Reservations")
+        st.page_link("pages/Chambre.py", label="Chambres")
         
         st.divider()
-        
-        # About Section
-        st.markdown("### ℹ️ À propos")
-        st.info(
-            "Système complet pour la gestion des agences de voyages et des réservations d'hôtels."
+
+        if 'global_lang' not in st.session_state:
+            st.session_state['global_lang'] = "FR"
+
+        options = ["FR", "ENG", "AR"]
+        current_idx = options.index(st.session_state['global_lang'])
+
+        selected = st.selectbox(
+            "Language / Langue / اللغة",
+            options=options,
+            index=current_idx,
+            key="lang_selector"
         )
         
-        # Dashboard Details
-        with st.expander("🛠️ Technologies", expanded=False):
-            st.markdown("• **Python**")
-            st.markdown("• **Streamlit**")
-            st.markdown("• **MySQL**")
-            st.markdown("• **Pandas**")
-
-            
+        st.session_state['global_lang'] = selected
+        
         st.divider()
+        return st.session_state['global_lang']

@@ -3,288 +3,286 @@ import pandas as pd
 import datetime as dt
 from datetime import date
 from db import get_connection
+from sidebar import render_sidebar
 
-
-# --- Charger les données depuis MySQL ---
-try:
-    conn = get_connection()
-    cursor = conn.cursor()
-    df = pd.read_sql("SELECT * FROM BOOKING", conn)  # suppose que la table a les colonnes suivantes : date, code, et autres infos
-except Exception as e:
-    st.error(f"Error while loading data : {e}")
-    st.stop()
-
-
-# --- 0. Configuration de la page Streamlit ---
+# 1. SET PAGE CONFIG FIRST
 st.set_page_config(
-    page_title="Hotel Reservation management project",
+    page_title="Hotel Management",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-from sidebar import render_sidebar
-render_sidebar()
-
+# 2. HIDE DEFAULT NAV
 st.markdown("""
     <style>
-        /* This additional css code is to hide the navigation menu */
-        [data-testid="stSidebarNav"] {
-            display: none;
-        }
+        [data-testid="stSidebarNav"] { display: none; }
     </style>
 """, unsafe_allow_html=True)
 
-# Nettoyage et préparation des données
+# 3. INITIALIZE SIDEBAR & LANG
+# Note: Since your sidebar.py now returns the lang_choice, we catch it here
+lang_choice = render_sidebar()
+
+LANGS = {
+    "ENG": {
+        "page_title": "Hotel Reservation Management",
+        "welcome_title": "Welcome to our Hotel Booking Dashboard",
+        "welcome_sub": "This interactive dashboard provides an overview of performance and cost trends.",
+        "kpi_section": "OVERALL PERFORMANCE",
+        "metric_res": "Total Reservations",
+        "metric_rev": "Total Revenue",
+        "metric_price": "Average Daily Price",
+        "metric_days": "Total Occupied Days",
+        "unit_days": "days",
+        "tab_trend": "Cost Evolution",
+        "tab_top": "Most expensive rooms by month",
+        "tab_book": "Book Your Stay",
+        "book_title": "Book Your Next Stay Easily",
+        "agency_label": "Travel Agency",
+        "room_type_label": "Room Type",
+        "room_label": "ROOM",
+        "start_label": "Start Date",
+        "end_label": "End Date",
+        "total_price_info": "Total Price",
+        "nights": "nights",
+        "date_error": "End date must be after start date",
+        "confirm_btn": "Confirm Booking",
+        "invalid_dates": "Invalid Dates",
+        "room_busy": "Room already booked",
+        "booking_success": "Booking successfully saved",
+        "chart_title": "Monthly Average Cost Evolution",
+        "chart_desc": "Track price fluctuations to adapt strategy",
+        "top_rooms_title": "Most expensive rooms per month",
+        "filter_section": "Filters available through our types of rooms",
+        "select_type": "SELECT ROOM TYPES",
+        "select_period": "SELECT A PERIOD",
+        "full_list": "Full booking List Based on Selected Filters",
+        "show_data": "show filtered data",
+        "rows": "rows",
+        "agency_filter_section": "Filters available through our agencies",
+        "agency_label_filter": "Agency",
+        "details_section": "Details for all reservations depending on agency"
+    },
+    "FR": {
+        "page_title": "Gestion des Réservations",
+        "welcome_title": "Bienvenue sur le tableau de bord",
+        "welcome_sub": "Ce tableau de bord interactif donne un aperçu des performances.",
+        "kpi_section": "PERFORMANCE GLOBALE",
+        "metric_res": "Total Réservations",
+        "metric_rev": "Revenu Total",
+        "metric_price": "Prix Journalier Moyen",
+        "metric_days": "Total Jours Occupés",
+        "unit_days": "jours",
+        "tab_trend": "Évolution des Coûts",
+        "tab_top": "Chambres les plus chères",
+        "tab_book": "Réserver",
+        "book_title": "Réservez votre séjour en quelques clics",
+        "agency_label": "Agence de Voyage",
+        "room_type_label": "Type de Chambre",
+        "room_label": "CHAMBRE",
+        "start_label": "Date de début",
+        "end_label": "Date de fin",
+        "total_price_info": "Prix Total",
+        "nights": "nuits",
+        "date_error": "La date de fin doit être après le début",
+        "confirm_btn": "Confirmer la réservation",
+        "invalid_dates": "Dates invalides",
+        "room_busy": "Chambre déjà occupée",
+        "booking_success": "Réservation enregistrée",
+        "chart_title": "Évolution du coût moyen mensuel",
+        "chart_desc": "Suivez les fluctuations de prix",
+        "top_rooms_title": "Chambres les plus chères par mois",
+        "filter_section": "Filtres par types de chambres",
+        "select_type": "CHOISIR TYPES",
+        "select_period": "CHOISIR PÉRIODE",
+        "full_list": "Liste complète selon filtres",
+        "show_data": "afficher les données",
+        "rows": "lignes",
+        "agency_filter_section": "Filtres par agences",
+        "agency_label_filter": "Agence",
+        "details_section": "Détails des réservations par agence"
+    },
+    "AR": {
+        "page_title": "إدارة حجز الفنادق",
+        "welcome_title": "مرحباً بكم في لوحة تحكم الحجوزات",
+        "welcome_sub": "توفر هذه اللوحة نظرة عامة على الأداء واتجاهات التكلفة",
+        "kpi_section": "الأداء العام",
+        "metric_res": "إجمالي الحجوزات",
+        "metric_rev": "إجمالي الإيرادات",
+        "metric_price": "متوسط السعر اليومي",
+        "metric_days": "إجمالي الأيام المحجوزة",
+        "unit_days": "أيام",
+        "tab_trend": "تطور التكلفة",
+        "tab_top": "أغلى الغرف شهرياً",
+        "tab_book": "احجز إقامتك",
+        "book_title": "احجز إقامتك التالية بسهولة",
+        "agency_label": "وكالة السفر",
+        "room_type_label": "نوع الغرفة",
+        "room_label": "الغرفة",
+        "start_label": "تاريخ البدء",
+        "end_label": "تاريخ الانتهاء",
+        "total_price_info": "السعر الإجمالي",
+        "nights": "ليالي",
+        "date_error": "تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء",
+        "confirm_btn": "تأكيد الحجز",
+        "invalid_dates": "تواريخ غير صالحة",
+        "room_busy": "الغرفة محجوزة بالفعل",
+        "booking_success": "تم حفظ الحجز بنجاح",
+        "chart_title": "تطور متوسط التكلفة الشهري",
+        "chart_desc": "تتبع تقلبات الأسعار لتكييف الاستراتيجية",
+        "top_rooms_title": "أغلى الغرف حسب الشهر",
+        "filter_section": "التصفيات المتاحة حسب نوع الغرفة",
+        "select_type": "اختر أنواع الغرف",
+        "select_period": "اختر الفترة",
+        "full_list": "قائمة الحجوزات الكاملة حسب الفلاتر",
+        "show_data": "إظهار البيانات المصقاة",
+        "rows": "صفوف",
+        "agency_filter_section": "التصفيات المتاحة حسب الوكالات",
+        "agency_label_filter": "الوكالة",
+        "details_section": "التفاصيل لجميع الحجوزات حسب الوكالة"
+    }
+}
+
+T = LANGS[lang_choice]
+
+# 4. DATABASE FETCH
+try:
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query_base = """
+        SELECT B.*, R.Type, R.Floor, R.SurfaceArea 
+        FROM BOOKING B 
+        JOIN ROOM R ON B.ROOM_CodR = R.CodR
+    """
+    df = pd.read_sql(query_base, conn)
+except Exception as e:
+    st.error(f"Error: {e}")
+    st.stop()
+
+# 5. DATA PRE-PROCESSING
 df['StartDate'] = pd.to_datetime(df['StartDate'])
 df['EndDate'] = pd.to_datetime(df['EndDate'])
-
-# Calcul des métriques
 df['duration'] = (df['EndDate'] - df['StartDate']).dt.days
+
+# THE 't' WAS REMOVED FROM HERE
+
 df['total_cost'] = df['Cost'] * df['duration']
 df['month_year'] = df['StartDate'].dt.to_period('M')
 
+# 6. UI HEADER
+st.title(T['welcome_title'])
+st.markdown(T['welcome_sub'])
+st.divider()
 
-# --- 2. En-tête et Personnalisation ---
+# 7. KPI SECTION
+st.header(T['kpi_section'])
+col1, col2, col3, col4 = st.columns(4)
 
-st.title("Welcome to our Hotel Booking Dashboard")
-st.markdown("""
- This interactive dashboard provides an overview of performance and cost trends.
-Use the filters to explore hotel booking statistics.
-""")
+with col1:
+    st.metric(T['metric_res'], f"{len(df):,.0f}")
+with col2:
+    st.metric(T['metric_rev'], f"{df['total_cost'].sum():,.0f} €")
+with col3:
+    st.metric(T['metric_price'], f"{df['Cost'].mean():,.2f} €")
+with col4:
+    st.metric(T['metric_days'], f"{df['duration'].sum():,.0f} {T['unit_days']}")
 
 st.divider()
 
-# --- 3. Indicateurs Clés de Performance (KPIs) ---
+# 8. TABS SECTION
+tab_graph, tab_top_rooms, tab_book = st.tabs([T['tab_trend'], T['tab_top'], T['tab_book']])
 
-st.header("📊 OVERALL PERFORMANCE")
+with tab_book:
+    st.header(T['book_title'])
+    price_per_night = {"single": 100, "double": 150, "suite": 300, "triple": 200}
+    
+    cursor.execute("SELECT CodA FROM TRAVEL_AGENCY")
+    agencies = [row['CodA'] for row in cursor.fetchall()]
+    
+    col_b1, col_b2 = st.columns(2)
+    with col_b1:
+        agency = st.selectbox(T['agency_label'], agencies)
+        room_type = st.selectbox(T['room_type_label'], list(price_per_night.keys()))
+    
+    with col_b2:
+        cursor.execute("SELECT CodR FROM ROOM WHERE Type = %s", (room_type,))
+        rooms = [row['CodR'] for row in cursor.fetchall()]
+        room = st.selectbox(T['room_label'], rooms)
+        
+    col_d1, col_d2 = st.columns(2)
+    with col_d1:
+        StartDate = st.date_input(T['start_label'], min_value=date.today())
+    with col_d2:
+        EndDate = st.date_input(T['end_label'], value=date.today() + dt.timedelta(days=1), min_value=date.today())
 
-
-# Utilisation de colonnes pour une mise en page claire
-col1, col2, col3, col4 = st.columns(4)
-total_revenue = df['total_cost'].sum()
-average_daily_price = df['Cost'].mean()
-total_occupied_days = df['duration'].sum()
-total_reservations = len(df)
-with col1:
-    st.metric("Total Réservations", f"*{total_reservations:,.0f}*")
-with col2:
-    st.metric("Total Revenue", f"*{total_revenue:,.0f} €*")
-with col3:
-    st.metric("Average Daily Price", f"*{average_daily_price:,.2f} €*")
-with col4:
-    st.metric("ToTal Occupied Days", f"*{total_occupied_days:,.0f} jours*")
-
-st.markdown("---")
-
-
-# --- 4. Analyse Détaillée (Utilisation des Onglets) ---
-st.header("🔍 Trend Analysis & Reservations Management")
-tab_graph, tab_top_rooms,tab_reserv = st.tabs(["📉 Cost Evolution ", "🛏️ Most expensive rooms by month","🏨Book Your Stay"])
-
-# ---------------- Prix par type ----------------
-with tab_reserv:
-  st.title("🏨 Your Next trip starts here, Book Your Next Stay Easily in a Few Clicks")
-  price_per_night = {
-        "Single": 100,
-        "Double": 150,
-        "suite": 300
-    }
-
-    # ---------------- Agences ----------------
-  cursor.execute("SELECT CodA FROM TRAVEL_AGENCY")
-  agencies = [row[0] for row in cursor.fetchall()]
-
-    # ---------------- Interface ----------------
-  agency = st.selectbox("Travel Agency", agencies)
-
-  room_type = st.selectbox(
-        "Room Type",
-        list(price_per_night.keys())
-    )
-
-    # Chambres correspondant au type
-  cursor.execute("""
-        SELECT CodR
-        FROM ROOM
-        WHERE Type= %s
-    """, (room_type,))
-  rooms = [row[0] for row in cursor.fetchall()]
-
-  room = st.selectbox("ROOM",rooms)
-
-  StartDate= st.date_input("StartDate", min_value=date.today())
-  EndDate= st.date_input("EndDate", min_value=date.today())
-
-# ---------------- Calcul automatique ----------------
-  if EndDate > StartDate:
-   nb_nights = (EndDate - StartDate).days
-   total_price= nb_nights * price_per_night[room_type]
-
-   st.info(f"💰total Price : {total_price} € ({nb_nights} nights)")
-  else:
-   st.warning("End date must be after start date")
-
-# ---------------- Bouton ----------------
-  if st.button("Confirm Booking"):
-    if EndDate <= StartDate:
-            st.error("❌ invalid Dates ")
-    else:
-            # Vérifier si la chambre est libre
+    if EndDate > StartDate:
+        nb_nights = (EndDate - StartDate).days
+        total_p = nb_nights * price_per_night.get(room_type, 0)
+        st.info(f"{T['total_price_info']} : {total_p} € ({nb_nights} {T['nights']})")
+        
+        if st.button(T['confirm_btn'], type="primary"):
             cursor.execute("""
-                SELECT *
-                FROM BOOKING
-                WHERE ROOM_CodR= %s
+                SELECT * FROM BOOKING 
+                WHERE ROOM_CodR = %s 
                 AND NOT (%s >= EndDate OR %s <= StartDate)
             """, (room, StartDate, EndDate))
-
+            
             if cursor.fetchone():
-                st.error("❌ Room already booked ")
+                st.error(T['room_busy'])
             else:
                 cursor.execute("""
-                    INSERT INTO BOOKING
-                    (ROOM_CodR,TRAVEL_AGENCY_CodA,StartDate,EndDate,Cost)
+                    INSERT INTO BOOKING (ROOM_CodR, TRAVEL_AGENCY_CodA, StartDate, EndDate, Cost) 
                     VALUES (%s, %s, %s, %s, %s)
-                """, (
-                    room,
-                    agency,
-                    StartDate,
-                    EndDate,
-                    total_price
-                ))
+                """, (room, agency, StartDate, EndDate, price_per_night[room_type]))
                 conn.commit()
-
-                st.success("✅ Booking successfully saved")
+                st.success(T['booking_success'])
+                st.rerun()
+    else:
+        st.warning(T['date_error'])
 
 with tab_graph:
- st.header(" 📈 Monthly Average Cost Evolution")
- st.markdown("You can track price fluctuations over the months to adapt your pricing strategy")
-# Préparation des données pour le graphique
- df_graph = df.groupby('month_year')['Cost'].mean().reset_index()
- df_graph['Month'] = df_graph['month_year'].astype(str)
- # Affichage du graphique linéaire
- st.line_chart(df_graph, x='Month', y='Cost', use_container_width=True)
+    st.header(T['chart_title'])
+    df_graph = df.groupby('month_year')['Cost'].mean().reset_index()
+    df_graph['Month'] = df_graph['month_year'].astype(str)
+    st.line_chart(df_graph.set_index('Month')['Cost'])
 
 with tab_top_rooms:
-    st.header("Most expensive rooms per month")
-    st.markdown("You will find the code,area,type and floor of the rooms with the highest average daily cost for each period")
- # Calcul de la chambre la plus chère par mois
-    df_month_room = df.groupby(['month_year', 'ROOM_CodR']).agg(avg_daily_price=('Cost', 'mean')).reset_index()
-    idx = df_month_room.groupby('month_year')['avg_daily_price'].idxmax()
-    df_top_room = df_month_room.loc[idx]
-    # Jointure pour les détails (superficie, étage, type)
-    conn=get_connection()
-    df['SurfaceArea']=pd.read_sql("SELECT SurfaceArea FROM ROOM",conn)
-    df['Floor']=pd.read_sql("SELECT Floor FROM ROOM",conn)
-    df["Type"]=pd.read_sql("SELECT Type FROM ROOM",conn)
-    conn.close()
-    df_top_details = pd.merge(df_top_room, df[['ROOM_CodR', 'SurfaceArea', 'Floor', 'Type']].drop_duplicates(), on='ROOM_CodR', how='left').drop_duplicates(subset=['month_year'])
- # Formatage de l'affichage
-    df_top_display = df_top_details[['month_year', 'ROOM_CodR', 'Floor', 'SurfaceArea', 'Type', 'avg_daily_price']]
-    df_top_display.columns = ['Month', 'Cod', 'Floor', 'Area(m²)', 'Room Type', 'Average price (€)']
-    df_top_display['Average price(€)'] = df_top_display['Average price (€)'].map('{:,.2f} €'.format)
-# Affichage dans un tableau
-    st.dataframe(df_top_display, use_container_width=True, hide_index=True)
-# --- 5.  Filtre par type de chambre---
-st.subheader("🔍Filters available through our types of rooms")
-
-col1, col2 = st.columns(2)
-
-with col1:
- selected_types = st.multiselect(
-            'SELECT ROOM TYPES',
-            options=df['Type'].unique(),
-            default=df['Type'].unique()
-)
-
-with col2:
- min_date = df['StartDate'].min().date()
- max_date = df['StartDate'].max().date()
- date_range = st.date_input(
-            "SELECT A PERIOD",
-            value=(min_date, max_date),
-            min_value=min_date,
-            max_value=max_date)
-# Application des filtres pour la vue détaillée
- if len(date_range) == 2:
-        StartDate, EndDate = date_range
-        df_filtered = df[(df['Type'].isin(selected_types)) &
-                         (df['StartDate'].dt.date >= StartDate) &
-                         (df['StartDate'].dt.date <= EndDate) ]
- else:
-# Gère le cas où l'utilisateur n'a sélectionné qu'une seule date
-        df_filtered = df[df['Type'].isin(selected_types)]
-
-# --- 6. Vue Détaillée des Données Filtrées (Bas de Page) ---
-
-st.header("Full booking List Based on Selected Filters")
-
-# Utilisation d'un expander pour ne pas surcharger la page
-with st.expander(f" 🔍⚙️ show filtred data ({df_filtered.shape[0]} lignes)", expanded=False):
-    st.markdown("Here is the liste of all available booking.")
-    st.dataframe(df_filtered.sort_values(by='StartDate', ascending=False), use_container_width=True)
-
-####FILTRES##
-st.subheader("🔍 Filters available through our agencies")
-try:
-    conn = get_connection()
-    df_agencies= pd.read_sql("SELECT CodA FROM TRAVEL_AGENCY", conn)
-except Exception as e:
-    st.error(f"Error loading agencies : {e}")
-    st.stop()
-
-# Filtre agence
-agency_list = ["ALL"] + df_agencies["CodA"].tolist()
-agency_filter = st.selectbox("Agency",agency_list)
-
-# Filtres dates
-col1, col2 = st.columns(2)
-with col1:
-    StartDate_filter = st.date_input("StartDate(filtre)", value=None)
-with col2:
-    EndDate_filter = st.date_input("EndDate(filtre)", value=None)
-
-# ==================================================
-# ============ REQUÊTE 1 : DÉTAIL ==================
-# ==================================================
+    st.header(T['top_rooms_title'])
+    idx = df.groupby('month_year')['Cost'].idxmax()
+    st.dataframe(df.loc[idx, ['month_year', 'ROOM_CodR', 'Type', 'Cost', 'Floor']], use_container_width=True, hide_index=True)
 
 st.divider()
-st.subheader("Details that you can view for all reservations depending on your chosen agency")
 
-query1 = """
-SELECT
-    B.ROOM_CodR AS Room_Code,
-    R.SurfaceArea,
-    R.Floor,
-    B.StartDate,
-    B.EndDate,
-    DATEDIFF(B.StartDate,B.EndDate) AS Nb_nights,
-    B.Cost AS Total_Cost,
-    T.CodA AS Agency_Code,
-    T.WebSite,
-    C.Name AS City
-FROM BOOKING B
-INNER JOIN ROOM R ON B.ROOM_CodR = R.CodR
-INNER JOIN TRAVEL_AGENCY T ON B.TRAVEL_AGENCY_CodA = T.CodA
-INNER JOIN CITY C ON T.City_Address = C.Name
-WHERE 1=1
-"""
+# 9. FILTER & LIST SECTION
+st.subheader(T['filter_section'])
+col_f1, col_f2 = st.columns(2)
+with col_f1:
+    selected_types = st.multiselect(T['select_type'], options=df['Type'].unique(), default=df['Type'].unique())
+with col_f2:
+    date_range = st.date_input(T['select_period'], value=(df['StartDate'].min().date(), df['StartDate'].max().date()))
 
-params1 = []
+if len(date_range) == 2:
+    df_filtered = df[
+        (df['Type'].isin(selected_types)) & 
+        (df['StartDate'].dt.date >= date_range[0]) & 
+        (df['StartDate'].dt.date <= date_range[1])
+    ]
+else:
+    df_filtered = df[df['Type'].isin(selected_types)]
 
+st.header(T['full_list'])
+with st.expander(f"{T['show_data']} ({len(df_filtered)} {T['rows']})"):
+    st.dataframe(df_filtered.sort_values(by='StartDate', ascending=False), use_container_width=True)
+
+st.divider()
+st.subheader(T['agency_filter_section'])
+agency_list = ["ALL"] + list(df['TRAVEL_AGENCY_CodA'].unique())
+agency_filter = st.selectbox(T['agency_label_filter'], agency_list)
+
+df_agency_final = df_filtered.copy()
 if agency_filter != "ALL":
-    query1 += " AND T.CodA = %s"
-    params1.append(agency_filter)
+    df_agency_final = df_agency_final[df_agency_final['TRAVEL_AGENCY_CodA'] == agency_filter]
 
-if StartDate_filter:
-    query1 += " AND B.StartDate >= %s"
-    params1.append(StartDate_filter)
+st.dataframe(df_agency_final[['ROOM_CodR', 'SurfaceArea', 'Floor', 'StartDate', 'EndDate', 'Cost', 'TRAVEL_AGENCY_CodA']], use_container_width=True)
 
-if EndDate_filter:
-    query1 += " AND B.EndDate<= %s"
-    params1.append(EndDate_filter)
-
-query1 += " ORDER BY B.ROOM_CodR, B.StartDate"
-
-df_detail = pd.read_sql(query1, conn, params=params1)
-
-st.dataframe(df_detail, use_container_width=True)
+conn.close()

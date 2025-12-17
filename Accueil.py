@@ -1,144 +1,201 @@
 import streamlit as st
+from sidebar import render_sidebar
 
-# Page configuration
 st.set_page_config(
-    page_title="Accueil - Projet Agences de Voyage", 
+    page_title="Travel Project",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-from sidebar import render_sidebar
-
-# --- SIDEBAR ---
-render_sidebar()
-
 st.markdown("""
     <style>
-        /* This additional css code is to hide the navigation menu */
-        [data-testid="stSidebarNav"] {
-            display: none;
-        }
+        [data-testid="stSidebarNav"] { display: none; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- HERO SECTION ---
-st.markdown("# 🌍 Projet Base de Données")
-st.markdown("## Système de Gestion des Agences de Voyage")
-st.caption("Application de gestion et visualisation des données")
+lang_choice = render_sidebar()
+
+LANGS = {
+    "ENG": {
+        "page_title": "Home - Travel Agency Project",
+        "hero_title": "Database Project",
+        "hero_subtitle": "Travel Agency Management System",
+        "hero_caption": "Data management and visualization application",
+        "info_title": "General Information",
+        "label_school": "Institution",
+        "school_val": "Ensa Kenitra",
+        "label_course": "Course",
+        "course_val": "Relational Databases",
+        "label_year": "Academic Year",
+        "year_val": "2025-2026",
+        "label_goals": "Project Objectives",
+        "goals_list": "- Relational database design\n- MySQL implementation\n- User interface development\n- Data analysis and visualization",
+        "team_title": "Project Team",
+        "team_caption": "Students who contributed to this project",
+        "feat_title": "Application Features",
+        "feat_agency_title": "Agency Management",
+        "feat_agency_list": "- Full agency list\n- Search by city\n- Map visualization\n- Data export",
+        "feat_stats_title": "Statistics",
+        "feat_stats_list": "- Key indicators\n- Interactive charts\n- Geographic analysis\n- Detailed reports",
+        "feat_search_title": "Advanced Search",
+        "feat_search_list": "- Multiple filters\n- Real-time results\n- Intuitive interface\n- Smooth navigation",
+        "tech_title": "Technologies Used",
+        "tech_db": "Database",
+        "tech_back": "Backend",
+        "tech_front": "Frontend",
+        "tech_viz": "Visualization"
+    },
+    "FR": {
+        "page_title": "Accueil - Projet Agences de Voyage",
+        "hero_title": "Projet Base de Données",
+        "hero_subtitle": "Système de Gestion des Agences de Voyage",
+        "hero_caption": "Application de gestion et visualisation des données",
+        "info_title": "Informations Générales",
+        "label_school": "Établissement",
+        "school_val": "Ensa Kenitra",
+        "label_course": "Cours",
+        "course_val": "Base de Données Relationnelles",
+        "label_year": "Année Académique",
+        "year_val": "2025-2026",
+        "label_goals": "Objectifs du Projet",
+        "goals_list": "- Conception d'une base de données relationnelle\n- Implémentation avec MySQL\n- Développement d'une interface utilisateur\n- Analyse et visualisation des données",
+        "team_title": "Équipe du Projet",
+        "team_caption": "Les étudiants qui ont contribué à ce projet",
+        "feat_title": "Fonctionnalités de l'Application",
+        "feat_agency_title": "Gestion des Agences",
+        "feat_agency_list": "- Liste complète des agences\n- Recherche par ville\n- Visualisation sur carte\n- Export des données",
+        "feat_stats_title": "Statistiques",
+        "feat_stats_list": "- Indicateurs clés\n- Graphiques interactifs\n- Analyse géographique\n- Rapports détaillés",
+        "feat_search_title": "Advanced Search",
+        "feat_search_list": "- Filtres multiples\n- Résultats en temps réel\n- Interface intuitive\n- Navigation fluide",
+        "tech_title": "Technologies Utilisées",
+        "tech_db": "Base de Données",
+        "tech_back": "Backend",
+        "tech_front": "Frontend",
+        "tech_viz": "Visualisation"
+    },
+    "AR": {
+        "page_title": "الرئيسية - مشروع وكالات السفر",
+        "hero_title": "مشروع قاعدة البيانات",
+        "hero_subtitle": "نظام إدارة وكالات السفر",
+        "hero_caption": "تطبيق إدارة وعرض البيانات",
+        "info_title": "معلومات عامة",
+        "label_school": "المؤسسة",
+        "school_val": "Ensa Kenitra",
+        "label_course": "المادة",
+        "course_val": "قواعد البيانات العلايقية",
+        "label_year": "السنة الأكاديمية",
+        "year_val": "2025-2026",
+        "label_goals": "أهداف المشروع",
+        "goals_list": "- تصميم قاعدة بيانات علائقية\n- التنفيذ باستخدام MySQL\n- تطوير واجهة المستخدم\n- تحليل البيانات وتصورها",
+        "team_title": "فريق المشروع",
+        "team_caption": "الطلاب الذين ساهموا في هذا المشروع",
+        "feat_title": "مميزات التطبيق",
+        "feat_agency_title": "إدارة الوكالات",
+        "feat_agency_list": "- قائمة الوكالات الكاملة\n- البحث حسب المدينة\n- العرض على الخريطة\n- تصدير البيانات",
+        "feat_stats_title": "الإحصائيات",
+        "feat_stats_list": "- المؤشرات الرئيسية\n- رسوم بيانية تفاعلية\n- التحليل الجغرافي\n- تقارير مفصلة",
+        "feat_search_title": "البحث المتقدم",
+        "feat_search_list": "- فلاتر متعددة\n- نتائج فورية\n- واجهة سهلة\n- تنقل سلس",
+        "tech_title": "التقنيات المستخدمة",
+        "tech_db": "قاعدة البيانات",
+        "tech_back": "الخلفية",
+        "tech_front": "الواجهة",
+        "tech_viz": "التمثيل البياني"
+    }
+}
+
+T = LANGS[lang_choice]
+
+if lang_choice == "AR":
+    st.markdown("""
+        <style>
+            [data-testid="stMainBlockContainer"] {
+                direction: RTL;
+                text-align: right;
+            }
+            [data-testid="stSidebar"] {
+                direction: LTR;
+                text-align: left;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+st.markdown(f"# {T['hero_title']}")
+st.markdown(f"## {T['hero_subtitle']}")
+st.caption(T['hero_caption'])
 st.divider()
 
-# --- PROJECT INFORMATION ---
-st.markdown("### 📋 Informations Générales")
-
+st.markdown(f"### {T['info_title']}")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("#### 🎓 Établissement")
-    st.info("**Université/École :** Votre Université")
-    
-    st.markdown("#### 📚 Cours")
-    st.info("**Matière :** Base de Données Relationnelles")
-    
-    st.markdown("#### 📅 Année Académique")
-    st.info("**Période :** 2024-2025")
+    st.info(f"**{T['label_school']} :** {T['school_val']}")
+    st.info(f"**{T['label_course']} :** {T['course_val']}")
+    st.info(f"**{T['label_year']} :** {T['year_val']}")
 
 with col2:
-    st.markdown("#### 🎯 Objectifs du Projet")
-    st.success("""
-    - Conception d'une base de données relationnelle
-    - Implémentation avec MySQL
-    - Développement d'une interface utilisateur
-    - Analyse et visualisation des données
-    """)
+    st.markdown(f"#### {T['label_goals']}")
+    st.success(T['goals_list'])
 
 st.divider()
 
-# --- TEAM SECTION ---
-st.markdown("### 👥 Équipe du Projet")
-st.caption("Les étudiants qui ont contribué à ce projet")
-
-# Create 7 student cards in rows
-row1_cols = st.columns(4)
-row2_cols = st.columns(3)
+st.markdown(f"### {T['team_title']}")
+st.caption(T['team_caption'])
 
 students = [
-    {"name": "Bouali Younes", "role": "Git & Page agence"},
-    {"name": "Étudiant 2", "role": "Développeur Backend"},
-    {"name": "Étudiant 3", "role": "Développeur Frontend"},
-    {"name": "Étudiant 4", "role": "Designer UI/UX"},
-    {"name": "Étudiant 5", "role": "Analyste de données"},
-    {"name": "Étudiant 6", "role": "Testeur QA"},
-    {"name": "Étudiant 7", "role": "Documentaliste"}
+    {"name": "Bouali Younes", "role": "Git & Agency Page"},
+    {"name": "Student 2", "role": "Backend Developer"},
+    {"name": "Student 3", "role": "Frontend Developer"},
+    {"name": "Student 4", "role": "UI/UX Designer"},
+    {"name": "Student 5", "role": "Data Analyst"},
+    {"name": "Student 6", "role": "QA Tester"},
+    {"name": "Student 7", "role": "Documentation"}
 ]
 
-# Display first 4 students
+row1_cols = st.columns(4)
 for i, col in enumerate(row1_cols):
     with col:
-        st.markdown(f"#### 👤 {students[i]['name']}")
-        st.caption(f"📌 {students[i]['role']}")
+        st.markdown(f"#### {students[i]['name']}")
+        st.caption(students[i]['role'])
 
 st.markdown("")
 
-# Display last 3 students
+row2_cols = st.columns(3)
 for i, col in enumerate(row2_cols):
     with col:
-        st.markdown(f"#### 👤 {students[i+4]['name']}")
-        st.caption(f"📌 {students[i+4]['role']}")
+        st.markdown(f"#### {students[i+4]['name']}")
+        st.caption(students[i+4]['role'])
 
 st.divider()
 
-# --- PROJECT FEATURES ---
-st.markdown("### ⚡ Fonctionnalités de l'Application")
+st.markdown(f"### {T['feat_title']}")
+fcol1, fcol2, fcol3 = st.columns(3)
 
-feature_col1, feature_col2, feature_col3 = st.columns(3)
+with fcol1:
+    st.markdown(f"#### {T['feat_agency_title']}")
+    st.write(T['feat_agency_list'])
 
-with feature_col1:
-    st.markdown("#### 🏢 Gestion des Agences")
-    st.write("""
-    - Liste complète des agences
-    - Recherche par ville
-    - Visualisation sur carte
-    - Export des données
-    """)
+with fcol2:
+    st.markdown(f"#### {T['feat_stats_title']}")
+    st.write(T['feat_stats_list'])
 
-with feature_col2:
-    st.markdown("#### 📊 Statistiques")
-    st.write("""
-    - Indicateurs clés
-    - Graphiques interactifs
-    - Analyse géographique
-    - Rapports détaillés
-    """)
-
-with feature_col3:
-    st.markdown("#### 🔍 Recherche Avancée")
-    st.write("""
-    - Filtres multiples
-    - Résultats en temps réel
-    - Interface intuitive
-    - Navigation fluide
-    """)
+with fcol3:
+    st.markdown(f"#### {T['feat_search_title']}")
+    st.write(T['feat_search_list'])
 
 st.divider()
 
-# --- TECHNOLOGIES USED ---
-st.markdown("### 🛠️ Technologies Utilisées")
+st.markdown(f"### {T['tech_title']}")
+tcol1, tcol2, tcol3, tcol4 = st.columns(4)
 
-tech_col1, tech_col2, tech_col3, tech_col4 = st.columns(4)
-
-with tech_col1:
-    st.metric(label="💾 Base de Données", value="MySQL")
-
-with tech_col2:
-    st.metric(label="🐍 Backend", value="Python")
-
-with tech_col3:
-    st.metric(label="🎨 Frontend", value="Streamlit")
-
-with tech_col4:
-    st.metric(label="📈 Visualisation", value="Pandas")
+with tcol1:
+    st.metric(label=T['tech_db'], value="MySQL")
+with tcol2:
+    st.metric(label=T['tech_back'], value="Python")
+with tcol3:
+    st.metric(label=T['tech_front'], value="Streamlit")
+with tcol4:
+    st.metric(label=T['tech_viz'], value="Pandas")
 
 st.divider()
-
-# --- FOOTER ---
-st.markdown("---")
