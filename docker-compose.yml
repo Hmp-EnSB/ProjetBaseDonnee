@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # MySQL Database Service
+  # ==========================================
+  db:
+    image: mysql:8.0
+    container_name: hotel_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hotel
+      MYSQL_USER: hoteluser
+      MYSQL_PASSWORD: hotelpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - hotel_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    command: --default-authentication-plugin=mysql_native_password
+
+  # ==========================================
+  # phpMyAdmin Web Interface
+  # ==========================================
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: hotel_phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: rootpassword
+      UPLOAD_LIMIT: 100M
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - hotel_network
+
+  # ==========================================
+  # Streamlit Web Application
+  # ==========================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hotel_streamlit
+    restart: always
+    ports:
+      - "8501:8501"
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=hotel
+      - DB_PORT=3306
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - hotel_network
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  hotel_network:
+    driver: bridge
+    name: hotel_network
+
+# ==========================================
+# Persistent Volumes
+# ==========================================
+volumes:
+  mysql_data:
+    driver: local
+    name: hotel_mysql_data

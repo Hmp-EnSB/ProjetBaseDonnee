@@ -1,0 +1,21 @@
+# Core Framework
+streamlit==1.32.0
+
+# Database & ORM
+SQLAlchemy==2.0.27
+PyMySQL==1.1.0
+cryptography==42.0.5
+mysql-connector-python==8.3.0
+
+# Data Processing
+pandas==2.2.1
+numpy==1.26.4
+
+# Visualization
+plotly==5.19.0
+matplotlib==3.8.3
+folium==0.16.0
+streamlit-folium==0.18.0
+
+# Utilities
+python-dotenv==1.0.1
